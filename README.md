@@ -1,31 +1,28 @@
 # Metadata-Ingestion-Service
 
-### Architecture
+### V1 Architecture
 
 ```
-                  REST API
+                         Metadata Ingestion Service
 
-                     │
-
-             Metadata Service
-
-                     │
-
-       +-------------+--------------+
-
-       |                            |
-
-Power BI Connector           Tableau Connector
-
-       |                            |
-
-       +-------------+--------------+
-
-                     │
-
-              Worker Pool
-
-                     │
-
-                 OpenSearch
+                   +-------------------------------+
+                   |            cmd/app            |
+                   +---------------+---------------+
+                                   |
+                                   |
+                         Ingestion Service
+                                   |
+                  +----------------+----------------+
+                  |                                 |
+           Connector Manager                 Worker Pool
+                  |                                 |
+        +---------+---------+                Metadata Channel
+        |         |         |                       |
+     PowerBI   Tableau    MLflow                    |
+                  |                                 |
+                  +---------------+-----------------+
+                                  |
+                           Metadata Processor
+                                  |
+                           OpenSearch Sink
 ```
