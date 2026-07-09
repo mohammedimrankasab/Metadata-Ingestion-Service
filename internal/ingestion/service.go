@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mohammedimrankasab/go-concurrency-examples/internal/logger"
-	"github.com/mohammedimrankasab/go-concurrency-examples/internal/models"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
 )
 
 type IngestionService struct{}

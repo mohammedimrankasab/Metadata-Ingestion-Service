@@ -1,6 +1,6 @@
 package main
 
-import "github.com/mohammedimrankasab/go-concurrency-examples/internal/ingestion"
+import "github.com/mohammedimrankasab/metadata-ingestion-service/internal/ingestion"
 
 func main() {
 

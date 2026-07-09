@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mohammedimrankasab/go-concurrency-examples/internal/logger"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
 )
 
 func ingestWorkspace(name string, wg *sync.WaitGroup) {

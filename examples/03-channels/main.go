@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/mohammedimrankasab/go-concurrency-examples/internal/logger"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
 )
 
 func producer(ch chan<- string) {
