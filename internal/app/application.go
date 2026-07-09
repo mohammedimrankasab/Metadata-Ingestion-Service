@@ -7,6 +7,7 @@ import (
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/ingestion"
 	inLog "github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/processor"
+	inSink "github.com/mohammedimrankasab/metadata-ingestion-service/internal/sink"
 	"go.uber.org/zap"
 )
 
@@ -42,6 +43,7 @@ type Components struct {
 	Logger     *zap.Logger
 	Processor  *processor.Processor
 	Connectors []connectors.Connector
+	Sink       inSink.Sink
 }
 
 func (app *Application) Run(ctx context.Context) error {

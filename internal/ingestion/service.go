@@ -7,6 +7,7 @@ import (
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/connectors"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/processor"
+	inSink "github.com/mohammedimrankasab/metadata-ingestion-service/internal/sink"
 	"go.uber.org/zap"
 )
 
@@ -29,7 +30,8 @@ func (s *Service) Run(ctx context.Context) error {
 	jobCh := make(chan models.MetadataJob, 100)
 
 	var wg sync.WaitGroup
-	p := processor.NewProcessor(s.logger)
+	sink := inSink.NewConsoleSink(s.logger)
+	p := processor.NewProcessor(s.logger, sink)
 
 	for i := 0; i <= workerCount; i++ {
 		wg.Add(1)
