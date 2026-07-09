@@ -28,8 +28,8 @@ The goal of this project is to demonstrate production-ready backend engineering 
 | Sprint | Status | Description |
 |---------|--------|-------------|
 | Sprint 1 | ✅ Completed | Connector framework, metadata model, Power BI connector |
-| Sprint 2 | ⏳ Next | Concurrent ingestion engine using worker pools |
-| Sprint 3 | ⏳ Planned | Retry, backoff and graceful shutdown |
+| Sprint 2 | ✅ Completed | Concurrent ingestion engine using worker pools |
+| Sprint 3 | ⏳ Next | Retry, backoff and graceful shutdown |
 | Sprint 4 | ⏳ Planned | Metrics, profiling and observability |
 | Sprint 5 | ⏳ Planned | Scheduler and background jobs |
 
@@ -51,7 +51,7 @@ Implemented:
 Git Commit:
 
 ```text
-feat: add connector abstraction and Power BI implementation
+feat: implement concurrent metadata ingestion using worker pool
 ```
 
 ---
