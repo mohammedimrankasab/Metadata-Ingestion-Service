@@ -4,19 +4,22 @@ import (
 	"context"
 	"time"
 
-	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
 	"go.uber.org/zap"
 )
 
-type Processor struct{}
+type Processor struct {
+	logger *zap.Logger
+}
 
-func NewProcessor() *Processor {
-	return &Processor{}
+func NewProcessor(logger *zap.Logger) *Processor {
+	return &Processor{
+		logger: logger,
+	}
 }
 
 func (p *Processor) Process(ctx context.Context, job models.MetadataJob) error {
-	logger.Log.Info("Processing metadata",
+	p.logger.Info("Processing metadata",
 		zap.String("name", job.Metadata.Name),
 		zap.String("workspace", job.Metadata.Workspace),
 	)

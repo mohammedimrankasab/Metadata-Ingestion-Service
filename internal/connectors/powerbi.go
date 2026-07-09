@@ -5,14 +5,18 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
+	"go.uber.org/zap"
 )
 
-type PowerBIConnector struct{}
+type PowerBIConnector struct {
+	logger *zap.Logger
+}
 
-func NewPowerBIConnector() *PowerBIConnector {
-	return &PowerBIConnector{}
+func NewPowerBIConnector(logger *zap.Logger) *PowerBIConnector {
+	return &PowerBIConnector{
+		logger: logger,
+	}
 }
 
 func (p *PowerBIConnector) Name() string {
@@ -21,7 +25,7 @@ func (p *PowerBIConnector) Name() string {
 
 func (p *PowerBIConnector) FetchMetadata(ctx context.Context, lastSyncTime *time.Time) ([]models.Metadata, error) {
 
-	logger.Log.Info("Fetching metadata from PowerBI connector...")
+	p.logger.Info("Fetching metadata from PowerBI connector...")
 
 	metadata := []models.Metadata{
 		{

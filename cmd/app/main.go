@@ -4,23 +4,25 @@ import (
 	"context"
 	"log"
 
-	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/connectors"
-	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/ingestion"
-	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/app"
+	"go.uber.org/zap"
 )
 
 func main() {
 
-	if err := logger.Init(); err != nil {
-		log.Fatalf("failed to initialize logger: %v", err)
+	application, err := app.NewApplication()
+
+	if err != nil {
+		log.Fatal(err)
 	}
 	ctx := context.Background()
+	if err := application.Run(ctx); err != nil {
 
-	service := ingestion.New(
-		connectors.NewPowerBIConnector(),
-	)
+		application.Components.Logger.Fatal(
+			"application failed",
+			zap.Error(err),
+		)
 
-	if err := service.Run(ctx); err != nil {
-		logger.Log.Fatal("ingestion failed")
 	}
+
 }

@@ -7,14 +7,17 @@ import (
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/connectors"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/processor"
+	"go.uber.org/zap"
 )
 
 type Service struct {
+	logger    *zap.Logger
 	Connector []connectors.Connector
 }
 
-func New(connectors ...connectors.Connector) *Service {
+func New(logger *zap.Logger, connectors ...connectors.Connector) *Service {
 	return &Service{
+		logger:    logger,
 		Connector: connectors,
 	}
 }
@@ -26,11 +29,11 @@ func (s *Service) Run(ctx context.Context) error {
 	jobCh := make(chan models.MetadataJob, 100)
 
 	var wg sync.WaitGroup
-	p := processor.NewProcessor()
+	p := processor.NewProcessor(s.logger)
 
 	for i := 0; i <= workerCount; i++ {
 		wg.Add(1)
-		go StartWorker(ctx, i, &wg, jobCh, p)
+		go StartWorker(ctx, i, s.logger, &wg, jobCh, p)
 	}
 	for _, connector := range s.Connector {
 		metadata, err := connector.FetchMetadata(ctx, nil)

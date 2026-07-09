@@ -51,7 +51,7 @@ Implemented:
 Git Commit:
 
 ```text
-feat: implement concurrent metadata ingestion using worker pool
+git commit -m "refactor: introduce application composition root"
 ```
 
 ---

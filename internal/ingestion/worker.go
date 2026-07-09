@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/processor"
 	"go.uber.org/zap"
@@ -13,6 +12,7 @@ import (
 func StartWorker(
 	ctx context.Context,
 	id int,
+	logger *zap.Logger,
 	wg *sync.WaitGroup,
 	jobs <-chan models.MetadataJob,
 	processor *processor.Processor,
@@ -23,7 +23,7 @@ func StartWorker(
 	for {
 		select {
 		case <-ctx.Done():
-			logger.Log.Info(
+			logger.Info(
 				"Worker stopped",
 				zap.Int("worker", id),
 			)
@@ -31,7 +31,7 @@ func StartWorker(
 		case job, ok := <-jobs:
 			if !ok {
 
-				logger.Log.Info(
+				logger.Info(
 					"Job channel closed",
 					zap.Int("worker", id),
 				)
@@ -39,7 +39,7 @@ func StartWorker(
 				return
 			}
 			if err := processor.Process(ctx, job); err != nil {
-				logger.Log.Error(
+				logger.Error(
 					"Failed processing",
 					zap.Error(err),
 				)
