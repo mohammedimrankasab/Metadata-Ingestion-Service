@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/connectors"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/ingestion"
@@ -10,6 +11,9 @@ import (
 
 func main() {
 
+	if err := logger.Init(); err != nil {
+		log.Fatalf("failed to initialize logger: %v", err)
+	}
 	ctx := context.Background()
 
 	service := ingestion.New(
@@ -17,7 +21,6 @@ func main() {
 	)
 
 	if err := service.Run(ctx); err != nil {
-		logger.Error("Error running ingestion service: " + err.Error())
-		panic(err)
+		logger.Log.Fatal("ingestion failed")
 	}
 }

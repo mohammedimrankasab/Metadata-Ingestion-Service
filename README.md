@@ -1,6 +1,84 @@
-# Metadata-Ingestion-Service
+# Metadata Ingestion Service
 
-### V1 Architecture
+A production-style metadata ingestion framework written in Go, inspired by enterprise metadata platforms.
+
+The goal of this project is to demonstrate production-ready backend engineering concepts including:
+
+- Concurrent metadata ingestion
+- Connector framework
+- Worker pools
+- Context propagation
+- Graceful shutdown
+- Retry mechanisms
+- Rate limiting
+- Observability
+- Profiling
+- Kubernetes readiness
+
+---
+
+## Architecture
+
+> 🚧 Architecture diagram will be added as the project evolves.
+
+---
+
+## Roadmap
+
+| Sprint | Status | Description |
+|---------|--------|-------------|
+| Sprint 1 | ✅ Completed | Connector framework, metadata model, Power BI connector |
+| Sprint 2 | ⏳ Next | Concurrent ingestion engine using worker pools |
+| Sprint 3 | ⏳ Planned | Retry, backoff and graceful shutdown |
+| Sprint 4 | ⏳ Planned | Metrics, profiling and observability |
+| Sprint 5 | ⏳ Planned | Scheduler and background jobs |
+
+---
+
+## Milestones
+
+### ✅ Milestone 1 - Connector Framework
+
+Implemented:
+
+- Connector abstraction
+- Power BI connector
+- Metadata model
+- Ingestion service
+- Context support
+- Incremental sync support (`lastSyncTime`)
+
+Git Commit:
+
+```text
+feat: add connector abstraction and Power BI implementation
+```
+
+---
+
+## Tech Stack
+
+- Go
+- Cobra
+- Viper
+- Zap
+- Docker
+- GitHub Actions (Upcoming)
+
+---
+
+## Upcoming Features
+
+- Worker Pool
+- Buffered Channels
+- Context Cancellation
+- Graceful Shutdown
+- OpenSearch Sink
+- REST API
+- Metrics
+- Profiling
+
+### V1 Architecture proposal
 
 ```
                          Metadata Ingestion Service

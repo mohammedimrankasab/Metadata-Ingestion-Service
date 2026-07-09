@@ -27,9 +27,9 @@ func consumer(ch <-chan string) {
 
 	for workspace := range ch {
 		// Implementation for ingesting workspace
-		logger.Info("Ingesting workspace: " + workspace)
+		logger.Log.Info("Ingesting workspace: " + workspace)
 		time.Sleep(2 * time.Second)
-		logger.Info("Finished ingesting workspace: " + workspace)
+		logger.Log.Info("Finished ingesting workspace: " + workspace)
 	}
 }
 

@@ -12,9 +12,9 @@ func ingest(id int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	// Implementation for ingesting data
 	strID := strconv.Itoa(id)
-	logger.Info("Processing metadata for id: " + strID)
+	logger.Log.Info("Processing metadata for id: " + strID)
 	time.Sleep(time.Second)
-	logger.Info("Completed metadata ingestion for id: " + strID)
+	logger.Log.Info("Completed metadata ingestion for id: " + strID)
 }
 
 func main() {
@@ -26,5 +26,5 @@ func main() {
 
 	}
 	wg.Wait()
-	logger.Info("All metadata ingested successfully.")
+	logger.Log.Info("All metadata ingested successfully.")
 }

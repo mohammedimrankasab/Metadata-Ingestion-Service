@@ -21,7 +21,7 @@ func (p *PowerBIConnector) Name() string {
 
 func (p *PowerBIConnector) FetchMetadata(ctx context.Context, lastSyncTime *time.Time) ([]models.Metadata, error) {
 
-	logger.Info("Fetching metadata from PowerBI connector...")
+	logger.Log.Info("Fetching metadata from PowerBI connector...")
 
 	metadata := []models.Metadata{
 		{
