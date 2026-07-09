@@ -1,17 +1,23 @@
 package main
 
-import "github.com/mohammedimrankasab/metadata-ingestion-service/internal/ingestion"
+import (
+	"context"
+
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/connectors"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/ingestion"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
+)
 
 func main() {
 
-	workspaces := []string{
-		"Marketing",
-		"Sales",
-		"Finance",
-		"HR",
-		"Engineering",
-	}
+	ctx := context.Background()
 
-	service := ingestion.NewIngestionService()
-	_ = service.IngestData(workspaces)
+	service := ingestion.New(
+		connectors.NewPowerBIConnector(),
+	)
+
+	if err := service.Run(ctx); err != nil {
+		logger.Error("Error running ingestion service: " + err.Error())
+		panic(err)
+	}
 }

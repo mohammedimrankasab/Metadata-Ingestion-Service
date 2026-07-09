@@ -1,8 +1,20 @@
 package models
 
+import "time"
+
+type MetadataType string
+
+const (
+	ReportType    MetadataType = "REPORT"
+	DashboardType MetadataType = "DASHBOARD"
+	DatasetType   MetadataType = "DATASET"
+)
+
 type Metadata struct {
-	ID         int
-	Source     string
-	Name       string
-	LastUpdate string
+	ID           string
+	Name         string
+	Type         MetadataType
+	Workspace    string
+	Source       string
+	LastModified time.Time
 }
