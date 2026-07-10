@@ -4,7 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/metrics"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/retry"
 	inSink "github.com/mohammedimrankasab/metadata-ingestion-service/internal/sink"
 	"go.uber.org/zap"
 )
@@ -25,23 +27,32 @@ func NewProcessor(
 }
 
 func (p *Processor) Process(ctx context.Context, job models.MetadataJob) error {
-	select {
+	start := time.Now()
 
-	case <-ctx.Done():
-
-		return ctx.Err()
-
-	case <-time.After(2 * time.Second):
-
-	}
+	defer func() {
+		metrics.ProcessingDuration.Observe(
+			time.Since(start).Seconds(),
+		)
+	}()
 	p.logger.Debug(
 		"Processing metadata",
 		zap.String("jobId", job.ID),
 		zap.String("connector", job.Connector),
 	)
+	cfg := retry.Config{
+		MaxRetries: 3,
+		BaseDelay:  500 * time.Millisecond,
+	}
+	err := retry.Do(ctx, cfg, func() error {
+		return p.sink.Write(ctx, job.Metadata)
+	})
 
-	return p.sink.Write(
-		ctx,
-		job.Metadata,
-	)
+	if err != nil {
+		metrics.JobsFailed.Inc()
+		return err
+	}
+
+	metrics.JobsProcessed.WithLabelValues(job.Connector).Inc()
+
+	return nil
 }

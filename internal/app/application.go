@@ -8,6 +8,7 @@ import (
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/ingestion"
 	inLog "github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/processor"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/server"
 	inSink "github.com/mohammedimrankasab/metadata-ingestion-service/internal/sink"
 	"go.uber.org/zap"
 )
@@ -24,6 +25,11 @@ func NewApplication() (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+	metricsServer := server.New(log)
+	config := inConfig.Config{
+		WorkerCount:  4,
+		JobQueueSize: 100,
+	}
 
 	powerBI := connectors.NewPowerBIConnector(log)
 	consoleSink := inSink.NewConsoleSink(log)
@@ -34,16 +40,16 @@ func NewApplication() (*Application, error) {
 	)
 	service := ingestion.New(
 		log,
+		config,
 		processor,
 		powerBI,
 	)
 	components := &Components{
 		Logger:     log,
+		Processor:  processor,
 		Connectors: []connectors.Connector{powerBI},
-	}
-	config := inConfig.Config{
-		WorkerCount:  4,
-		JobQueueSize: 100,
+		Sink:       consoleSink,
+		Server:     metricsServer,
 	}
 	return &Application{
 		Components:       components,
@@ -57,10 +63,12 @@ type Components struct {
 	Processor  *processor.Processor
 	Connectors []connectors.Connector
 	Sink       inSink.Sink
+	Server     *server.Server
 }
 
 func (app *Application) Run(ctx context.Context) error {
 	app.Components.Logger.Info("Application starting")
+	app.Components.Server.Start()
 	defer func() {
 		_ = app.Components.Logger.Sync()
 	}()

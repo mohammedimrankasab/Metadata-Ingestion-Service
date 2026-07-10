@@ -8,10 +8,12 @@ import (
 	"syscall"
 
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/app"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/metrics"
 	"go.uber.org/zap"
 )
 
 func main() {
+	metrics.Register()
 
 	ctx, stop := signal.NotifyContext(
 		context.Background(),

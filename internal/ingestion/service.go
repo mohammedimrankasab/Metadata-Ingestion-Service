@@ -2,7 +2,6 @@ package ingestion
 
 import (
 	"context"
-	"runtime"
 	"sync"
 
 	inConfig "github.com/mohammedimrankasab/metadata-ingestion-service/internal/config"
@@ -16,11 +15,13 @@ type Service struct {
 	logger     *zap.Logger
 	processor  *processor.Processor
 	connectors []connectors.Connector
+	config     inConfig.Config
 }
 
-func New(logger *zap.Logger, processor *processor.Processor, connectors ...connectors.Connector) *Service {
+func New(logger *zap.Logger, config inConfig.Config, processor *processor.Processor, connectors ...connectors.Connector) *Service {
 	return &Service{
 		logger:     logger,
+		config:     config,
 		processor:  processor,
 		connectors: connectors,
 	}
@@ -28,16 +29,11 @@ func New(logger *zap.Logger, processor *processor.Processor, connectors ...conne
 
 func (s *Service) Run(ctx context.Context) error {
 
-	cfg := inConfig.Config{
-		WorkerCount:  runtime.NumCPU(),
-		JobQueueSize: 100,
-	}
-
-	jobs := make(chan models.MetadataJob, cfg.JobQueueSize)
+	jobs := make(chan models.MetadataJob, s.config.JobQueueSize)
 
 	var wg sync.WaitGroup
 
-	for i := 1; i <= cfg.WorkerCount; i++ {
+	for i := 1; i <= s.config.WorkerCount; i++ {
 		wg.Add(1)
 
 		go StartWorker(
