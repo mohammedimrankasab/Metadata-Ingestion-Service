@@ -2,6 +2,7 @@ package connectors
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,26 +27,29 @@ func (p *PowerBIConnector) Name() string {
 func (p *PowerBIConnector) FetchMetadata(ctx context.Context, lastSyncTime *time.Time) ([]models.Metadata, error) {
 
 	p.logger.Info("Fetching metadata from PowerBI connector...")
+	select {
 
-	m1 := models.NewMetadata(
-		uuid.NewString(),
-		"Finance Dashboard",
-		models.DashboardType,
-		"Finance",
-		p.Name(),
-		time.Now(),
-	)
-	m2 := models.NewMetadata(
-		uuid.NewString(),
-		"Sales Report",
-		models.ReportType,
-		"Sales",
-		p.Name(),
-		time.Now(),
-	)
-	metadataList := []models.Metadata{
-		m1,
-		m2,
+	case <-ctx.Done():
+		return nil, ctx.Err()
+
+	case <-time.After(10 * time.Second):
+
+	}
+	metadataList := make([]models.Metadata, 0, 200)
+
+	for i := 1; i <= 200; i++ {
+
+		metadataList = append(metadataList,
+			models.NewMetadata(
+				uuid.NewString(),
+				fmt.Sprintf("Dashboard-%d", i),
+				models.DashboardType,
+				"Finance",
+				p.Name(),
+				time.Now(),
+			),
+		)
+
 	}
 
 	if lastSyncTime == nil {

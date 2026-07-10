@@ -2,6 +2,7 @@ package processor
 
 import (
 	"context"
+	"time"
 
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
 	inSink "github.com/mohammedimrankasab/metadata-ingestion-service/internal/sink"
@@ -24,7 +25,15 @@ func NewProcessor(
 }
 
 func (p *Processor) Process(ctx context.Context, job models.MetadataJob) error {
+	select {
 
+	case <-ctx.Done():
+
+		return ctx.Err()
+
+	case <-time.After(2 * time.Second):
+
+	}
 	p.logger.Debug(
 		"Processing metadata",
 		zap.String("jobId", job.ID),

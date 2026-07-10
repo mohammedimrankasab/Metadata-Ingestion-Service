@@ -2,8 +2,10 @@ package ingestion
 
 import (
 	"context"
+	"runtime"
 	"sync"
 
+	inConfig "github.com/mohammedimrankasab/metadata-ingestion-service/internal/config"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/connectors"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/processor"
@@ -26,13 +28,16 @@ func New(logger *zap.Logger, processor *processor.Processor, connectors ...conne
 
 func (s *Service) Run(ctx context.Context) error {
 
-	const workerCount = 4
+	cfg := inConfig.Config{
+		WorkerCount:  runtime.NumCPU(),
+		JobQueueSize: 100,
+	}
 
-	jobsCh := make(chan models.MetadataJob, 100)
+	jobs := make(chan models.MetadataJob, cfg.JobQueueSize)
 
 	var wg sync.WaitGroup
 
-	for i := 1; i <= workerCount; i++ {
+	for i := 1; i <= cfg.WorkerCount; i++ {
 		wg.Add(1)
 
 		go StartWorker(
@@ -40,17 +45,18 @@ func (s *Service) Run(ctx context.Context) error {
 			i,
 			s.logger,
 			&wg,
-			jobsCh,
+			jobs,
 			s.processor,
 		)
 	}
-
+	defer func() {
+		close(jobs)
+		wg.Wait()
+	}()
 	for _, connector := range s.connectors {
 
 		metadataList, err := connector.FetchMetadata(ctx, nil)
 		if err != nil {
-			close(jobsCh)
-			wg.Wait()
 			return err
 		}
 
@@ -60,14 +66,15 @@ func (s *Service) Run(ctx context.Context) error {
 				metadata,
 			)
 
-			jobsCh <- job
+			select {
+			case <-ctx.Done():
+				s.logger.Info("Stopping job submission")
+				return ctx.Err()
+
+			case jobs <- job:
+			}
 		}
 	}
-
-	close(jobsCh)
-
-	wg.Wait()
-
 	s.logger.Info("Metadata ingestion completed")
 
 	return nil

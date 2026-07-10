@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/app"
 	"go.uber.org/zap"
@@ -10,12 +13,19 @@ import (
 
 func main() {
 
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
+
+	defer stop()
+
 	application, err := app.NewApplication()
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx := context.Background()
 	if err := application.Run(ctx); err != nil {
 
 		application.Components.Logger.Fatal(
