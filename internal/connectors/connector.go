@@ -9,5 +9,11 @@ import (
 
 type Connector interface {
 	Name() string
-	FetchMetadata(ctx context.Context, lastSyncTime *time.Time) ([]models.Metadata, error)
+	FetchMetadata(
+		ctx context.Context,
+		lastSyncTime *time.Time,
+	) ([]models.Metadata, error)
+	Health(
+		ctx context.Context,
+	) error
 }

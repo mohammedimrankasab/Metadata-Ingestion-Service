@@ -24,9 +24,11 @@ func NewProcessor(
 }
 
 func (p *Processor) Process(ctx context.Context, job models.MetadataJob) error {
+
 	p.logger.Debug(
 		"Processing metadata",
 		zap.String("jobId", job.ID),
+		zap.String("connector", job.Connector),
 	)
 
 	return p.sink.Write(

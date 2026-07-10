@@ -12,14 +12,16 @@ import (
 )
 
 type Service struct {
-	logger    *zap.Logger
-	Connector []connectors.Connector
+	logger     *zap.Logger
+	processor  *processor.Processor
+	connectors []connectors.Connector
 }
 
-func New(logger *zap.Logger, connectors ...connectors.Connector) *Service {
+func New(logger *zap.Logger, processor *processor.Processor, connectors ...connectors.Connector) *Service {
 	return &Service{
-		logger:    logger,
-		Connector: connectors,
+		logger:     logger,
+		processor:  processor,
+		connectors: connectors,
 	}
 }
 
@@ -37,14 +39,14 @@ func (s *Service) Run(ctx context.Context) error {
 		wg.Add(1)
 		go StartWorker(ctx, i, s.logger, &wg, jobCh, p)
 	}
-	for _, connector := range s.Connector {
+	for _, connector := range s.connectors {
 		metadata, err := connector.FetchMetadata(ctx, nil)
 		if err != nil {
 			return err
 		}
 
 		for _, item := range metadata {
-			jobCh <- models.NewJob(item)
+			jobCh <- models.NewJob(connector.Name(), item)
 		}
 	}
 	close(jobCh)

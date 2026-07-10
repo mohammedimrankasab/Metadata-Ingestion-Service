@@ -27,35 +27,41 @@ func (p *PowerBIConnector) FetchMetadata(ctx context.Context, lastSyncTime *time
 
 	p.logger.Info("Fetching metadata from PowerBI connector...")
 
-	metadata := []models.Metadata{
-		{
-			ID:           uuid.NewString(),
-			Name:         "Finance Dashboard",
-			Source:       p.Name(),
-			Type:         models.DashboardType,
-			Workspace:    "Finance",
-			LastModified: time.Now(),
-		},
-		{
-			ID:           uuid.NewString(),
-			Name:         "Sales Report",
-			Source:       p.Name(),
-			Type:         models.ReportType,
-			Workspace:    "Sales",
-			LastModified: time.Now(),
-		},
+	m1 := models.NewMetadata(
+		uuid.NewString(),
+		"Finance Dashboard",
+		models.DashboardType,
+		"Finance",
+		p.Name(),
+		time.Now(),
+	)
+	m2 := models.NewMetadata(
+		uuid.NewString(),
+		"Sales Report",
+		models.ReportType,
+		"Sales",
+		p.Name(),
+		time.Now(),
+	)
+	metadataList := []models.Metadata{
+		m1,
+		m2,
 	}
 
-	if lastSyncTime != nil {
-		filteredMetadata := make([]models.Metadata, 0)
+	if lastSyncTime == nil {
+		return metadataList, nil
+	}
 
-		for _, m := range metadata {
-			if m.LastModified.After(*lastSyncTime) {
-				filteredMetadata = append(filteredMetadata, m)
-			}
+	filtered := make([]models.Metadata, 0, len(metadataList))
+
+	for _, m := range metadataList {
+		if m.LastModified.After(*lastSyncTime) {
+			filtered = append(filtered, m)
 		}
-
-		return filteredMetadata, nil
 	}
-	return metadata, nil
+
+	return filtered, nil
+}
+func (p *PowerBIConnector) Health(ctx context.Context) error {
+	return nil
 }

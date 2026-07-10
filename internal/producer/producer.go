@@ -24,7 +24,7 @@ func (p *Producer) Produce(
 ) error {
 
 	for _, item := range metadata {
-		job := models.NewJob(item)
+		job := models.NewJob("", item)
 		select {
 		case <-ctx.Done():
 			return ctx.Err()

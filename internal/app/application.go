@@ -7,6 +7,7 @@ import (
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/ingestion"
 	inLog "github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/processor"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/sink"
 	inSink "github.com/mohammedimrankasab/metadata-ingestion-service/internal/sink"
 	"go.uber.org/zap"
 )
@@ -24,9 +25,15 @@ func NewApplication() (*Application, error) {
 	}
 
 	powerBI := connectors.NewPowerBIConnector(log)
+	consoleSink := sink.NewConsoleSink(log)
 
+	processor := processor.NewProcessor(
+		log,
+		consoleSink,
+	)
 	service := ingestion.New(
 		log,
+		processor,
 		powerBI,
 	)
 	components := &Components{

@@ -14,7 +14,6 @@ type ConsoleSink struct {
 func NewConsoleSink(
 	logger *zap.Logger,
 ) *ConsoleSink {
-
 	return &ConsoleSink{
 		logger: logger,
 	}
@@ -26,8 +25,8 @@ func (c *ConsoleSink) Write(
 ) error {
 
 	c.logger.Info(
-		"Metadata indexed",
-		zap.String("source", metadata.Source),
+		"Metadata Written",
+		zap.String("connector", metadata.Source),
 		zap.String("workspace", metadata.Workspace),
 		zap.String("name", metadata.Name),
 		zap.String("type", string(metadata.Type)),
