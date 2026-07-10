@@ -19,7 +19,10 @@ func StartWorker(
 ) {
 
 	defer wg.Done()
-
+	logger.Info(
+		"Worker started",
+		zap.Int("worker", id),
+	)
 	for {
 		select {
 		case <-ctx.Done():

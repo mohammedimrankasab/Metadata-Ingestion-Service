@@ -7,7 +7,6 @@ import (
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/connectors"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/processor"
-	inSink "github.com/mohammedimrankasab/metadata-ingestion-service/internal/sink"
 	"go.uber.org/zap"
 )
 
@@ -29,28 +28,47 @@ func (s *Service) Run(ctx context.Context) error {
 
 	const workerCount = 4
 
-	jobCh := make(chan models.MetadataJob, 100)
+	jobsCh := make(chan models.MetadataJob, 100)
 
 	var wg sync.WaitGroup
-	sink := inSink.NewConsoleSink(s.logger)
-	p := processor.NewProcessor(s.logger, sink)
 
-	for i := 0; i <= workerCount; i++ {
+	for i := 1; i <= workerCount; i++ {
 		wg.Add(1)
-		go StartWorker(ctx, i, s.logger, &wg, jobCh, p)
+
+		go StartWorker(
+			ctx,
+			i,
+			s.logger,
+			&wg,
+			jobsCh,
+			s.processor,
+		)
 	}
+
 	for _, connector := range s.connectors {
-		metadata, err := connector.FetchMetadata(ctx, nil)
+
+		metadataList, err := connector.FetchMetadata(ctx, nil)
 		if err != nil {
+			close(jobsCh)
+			wg.Wait()
 			return err
 		}
 
-		for _, item := range metadata {
-			jobCh <- models.NewJob(connector.Name(), item)
+		for _, metadata := range metadataList {
+			job := models.NewJob(
+				connector.Name(),
+				metadata,
+			)
+
+			jobsCh <- job
 		}
 	}
-	close(jobCh)
+
+	close(jobsCh)
+
 	wg.Wait()
+
+	s.logger.Info("Metadata ingestion completed")
 
 	return nil
 
