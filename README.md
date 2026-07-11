@@ -60,47 +60,12 @@ The goal of this project is to demonstrate production-ready backend engineering 
 
 ---
 
-## Roadmap
-
-| Sprint | Status | Description |
-|---------|--------|-------------|
-| Sprint 1 | ✅ Completed | Connector framework, metadata model, Power BI connector |
-| Sprint 2 | ✅ Completed | Concurrent ingestion engine using worker pools |
-| Sprint 3 | ⏳ Next | Retry, backoff and graceful shutdown |
-| Sprint 4 | ⏳ Planned | Metrics, profiling and observability |
-| Sprint 5 | ⏳ Planned | Scheduler and background jobs |
-
----
-
-## Milestones
-
-### ✅ Milestone 1 - Connector Framework
-
-Implemented:
-
-- Connector abstraction
-- Power BI connector
-- Metadata model
-- Ingestion service
-- Context support
-- Incremental sync support (`lastSyncTime`)
-
-Git Commit:
-
-```text
-git commit -m "refactor: introduce application composition root"
-```
-
----
-
 ## Tech Stack
 
 - Go
-- Cobra
-- Viper
 - Zap
 - Docker
-- GitHub Actions (Upcoming)
+- GitHub Actions
 
 ---
 
