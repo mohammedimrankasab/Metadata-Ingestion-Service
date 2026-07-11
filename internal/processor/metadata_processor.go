@@ -8,6 +8,7 @@ import (
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/retry"
 	inSink "github.com/mohammedimrankasab/metadata-ingestion-service/internal/sink"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
 
@@ -53,6 +54,13 @@ func (p *Processor) Process(ctx context.Context, job models.MetadataJob) error {
 	}
 
 	metrics.JobsProcessed.WithLabelValues(job.Connector).Inc()
+	tracer := otel.Tracer("processor")
 
+	ctx, span := tracer.Start(
+		ctx,
+		"ProcessMetadata",
+	)
+
+	defer span.End()
 	return nil
 }

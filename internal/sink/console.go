@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
 
@@ -31,6 +32,13 @@ func (c *ConsoleSink) Write(
 		zap.String("name", metadata.Name),
 		zap.String("type", string(metadata.Type)),
 	)
+	tracer := otel.Tracer("sink")
 
+	_, span := tracer.Start(
+		ctx,
+		"WriteMetadata",
+	)
+
+	defer span.End()
 	return nil
 }

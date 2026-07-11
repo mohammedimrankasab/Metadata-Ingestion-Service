@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
 
@@ -63,7 +64,14 @@ func (p *PowerBIConnector) FetchMetadata(ctx context.Context, lastSyncTime *time
 			filtered = append(filtered, m)
 		}
 	}
+	tracer := otel.Tracer("connector")
 
+	_, span := tracer.Start(
+		ctx,
+		"FetchMetadata",
+	)
+
+	defer span.End()
 	return filtered, nil
 }
 func (p *PowerBIConnector) Health(ctx context.Context) error {

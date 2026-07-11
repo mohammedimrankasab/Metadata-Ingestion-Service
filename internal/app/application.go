@@ -3,10 +3,9 @@ package app
 import (
 	"context"
 
-	inConfig "github.com/mohammedimrankasab/metadata-ingestion-service/internal/config"
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/config"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/connectors"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/ingestion"
-	inLog "github.com/mohammedimrankasab/metadata-ingestion-service/internal/logger"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/processor"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/server"
 	inSink "github.com/mohammedimrankasab/metadata-ingestion-service/internal/sink"
@@ -16,54 +15,42 @@ import (
 type Application struct {
 	Components       *Components
 	IngestionService *ingestion.Service
-	Config           inConfig.Config
+	Config           config.Config
 }
 
-func NewApplication() (*Application, error) {
+func NewApplication(
+	cfg config.Config,
+	logger *zap.Logger,
+) (*Application, error) {
 
-	log, err := inLog.NewLogger()
-	if err != nil {
-		return nil, err
-	}
-	metricsServer := server.New(log)
-	config := inConfig.Config{
-		WorkerCount:  4,
-		JobQueueSize: 100,
-	}
-
-	powerBI := connectors.NewPowerBIConnector(log)
-	consoleSink := inSink.NewConsoleSink(log)
+	powerBI := connectors.NewPowerBIConnector(logger)
+	consoleSink := inSink.NewConsoleSink(logger)
 
 	processor := processor.NewProcessor(
-		log,
+		logger,
 		consoleSink,
 	)
 	service := ingestion.New(
-		log,
-		config,
+		logger,
+		cfg,
 		processor,
 		powerBI,
 	)
+	metricsServer := server.New(logger, cfg, service)
 	components := &Components{
-		Logger:     log,
-		Processor:  processor,
-		Connectors: []connectors.Connector{powerBI},
-		Sink:       consoleSink,
-		Server:     metricsServer,
+		Logger: logger,
+		Server: metricsServer,
 	}
 	return &Application{
 		Components:       components,
 		IngestionService: service,
-		Config:           config,
+		Config:           cfg,
 	}, nil
 }
 
 type Components struct {
-	Logger     *zap.Logger
-	Processor  *processor.Processor
-	Connectors []connectors.Connector
-	Sink       inSink.Sink
-	Server     *server.Server
+	Logger *zap.Logger
+	Server *server.Server
 }
 
 func (app *Application) Run(ctx context.Context) error {
