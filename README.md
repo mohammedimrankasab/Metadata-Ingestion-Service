@@ -7,8 +7,6 @@
 
 ![Docker](https://img.shields.io/badge/docker-ready-blue)
 
-![Kubernetes](https://img.shields.io/badge/kubernetes-ready-blue)
-
 ![Prometheus](https://img.shields.io/badge/prometheus-enabled-orange)
 
 A production-style metadata ingestion framework written in Go, inspired by enterprise metadata platforms.
@@ -24,7 +22,6 @@ The goal of this project is to demonstrate production-ready backend engineering 
 - Rate limiting
 - Observability
 - Profiling
-- Kubernetes readiness
 
 ---
 
@@ -81,7 +78,6 @@ The goal of this project is to demonstrate production-ready backend engineering 
 - Prometheus metrics
 - HTTP health endpoints
 - Docker support
-- Kubernetes manifests
 - GitHub Actions CI
 
 ## Concepts Demonstrated
@@ -98,5 +94,4 @@ The goal of this project is to demonstrate production-ready backend engineering 
 - Prometheus Metrics
 - HTTP Servers
 - Docker
-- Kubernetes
 - CI/CD
