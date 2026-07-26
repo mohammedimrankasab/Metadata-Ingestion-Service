@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const sampleMetadataCount = 200
+
 type PowerBIConnector struct {
 	logger *zap.Logger
 }
@@ -26,19 +28,30 @@ func (p *PowerBIConnector) Name() string {
 }
 
 func (p *PowerBIConnector) FetchMetadata(ctx context.Context, lastSyncTime *time.Time) ([]models.Metadata, error) {
+	tracer := otel.Tracer("connectors")
 
+	ctx, span := tracer.Start(
+		ctx,
+		"PowerBI.FetchMetadata",
+	)
+
+	defer span.End()
 	p.logger.Info("Fetching metadata from PowerBI connector...")
 	select {
 
 	case <-ctx.Done():
 		return nil, ctx.Err()
 
-	case <-time.After(10 * time.Second):
+	case <-time.After(500 * time.Millisecond):
 
 	}
-	metadataList := make([]models.Metadata, 0, 200)
-
-	for i := 1; i <= 200; i++ {
+	metadataList := make(
+		[]models.Metadata,
+		0,
+		sampleMetadataCount,
+	)
+	now := time.Now()
+	for i := 1; i <= sampleMetadataCount; i++ {
 
 		metadataList = append(metadataList,
 			models.NewMetadata(
@@ -47,13 +60,17 @@ func (p *PowerBIConnector) FetchMetadata(ctx context.Context, lastSyncTime *time
 				models.DashboardType,
 				"Finance",
 				p.Name(),
-				time.Now(),
+				now,
 			),
 		)
 
 	}
 
 	if lastSyncTime == nil {
+		p.logger.Info(
+			"metadata fetched",
+			zap.Int("count", len(metadataList)),
+		)
 		return metadataList, nil
 	}
 
@@ -64,16 +81,14 @@ func (p *PowerBIConnector) FetchMetadata(ctx context.Context, lastSyncTime *time
 			filtered = append(filtered, m)
 		}
 	}
-	tracer := otel.Tracer("connector")
 
-	_, span := tracer.Start(
-		ctx,
-		"FetchMetadata",
+	p.logger.Info(
+		"metadata fetched",
+		zap.Int("count", len(filtered)),
 	)
-
-	defer span.End()
 	return filtered, nil
 }
 func (p *PowerBIConnector) Health(ctx context.Context) error {
+	p.logger.Debug("checking connector health")
 	return nil
 }

@@ -26,14 +26,14 @@ func main() {
 
 	cfg := config.Load()
 
-	logger, err := logger.NewLogger()
+	logger, err := logger.New()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	metrics.Register()
 
-	application, err := app.NewApplication(cfg, logger)
+	application, err := app.NewApplication(*cfg, logger)
 
 	if err != nil {
 		logger.Fatal(

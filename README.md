@@ -1,15 +1,9 @@
 # Metadata Ingestion Service
 
 
-![Go](https://img.shields.io/badge/Go-1.24-blue)
+![Go](https://img.shields.io/badge/Go-1.26-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Docker](https://img.shields.io/badge/docker-ready-blue) ![Prometheus](https://img.shields.io/badge/prometheus-enabled-orange)
 
-![License](https://img.shields.io/badge/license-MIT-green)
-
-![Docker](https://img.shields.io/badge/docker-ready-blue)
-
-![Prometheus](https://img.shields.io/badge/prometheus-enabled-orange)
-
-Metadata Ingestion Service is a cloud-native backend application written in Go that demonstrates production-grade software engineering practices including concurrent processing, worker pools, retry mechanisms, observability, graceful shutdown, and scalable connector-based ingestion pipelines.
+**Metadata Ingestion Service** is a production-style backend application written in Go that demonstrates scalable metadata ingestion, concurrent processing, observability, and fault-tolerant system design.
 
 Inspired by enterprise metadata platforms, the project showcases how to build maintainable, fault-tolerant backend services using modern Go design principles.
 
@@ -37,33 +31,11 @@ The goal of this project is to demonstrate production-ready backend engineering 
 
 ## Architecture
 
-                    +----------------------+
-                    |      HTTP Server     |
-                    +----------+-----------+
-                               |
-                     Middleware (Logging, Recovery)
-                               |
-                               ▼
-                     Ingestion Service
-                               |
-                        Worker Pool
-                 (goroutines + channels)
-                               |
-            +------------------+------------------+
-            |                  |                  |
-         Power BI          Tableau           MLflow
-            |                  |                  |
-            +------------------+------------------+
-                               |
-                           Processor
-                               |
-                       Retry Framework
-                               |
-                            Sink Layer
-                               |
-                           Console(OpenSearch)
-                               |
-              Prometheus Metrics + OpenTelemetry
+The following diagram illustrates the high-level architecture of the Metadata Ingestion Service and the flow of metadata through the ingestion pipeline.
+
+<p align="center">
+  <img src="docs/architecture.png" alt="Metadata Ingestion Service Architecture" width="900"/>
+</p>
 
 ---
 
@@ -99,17 +71,66 @@ The goal of this project is to demonstrate production-ready backend engineering 
 ## Project Structure
 
 ```text
-cmd/
-internal/
-    connectors/
-    processor/
-    worker/
-    retry/
-    metrics/
-    middleware/
-pkg/
-configs/
-docker/
+.
+├── cmd/
+│   └── app/                 # Application entry point
+├── internal/
+│   ├── app/                 # Application bootstrap and initialization
+│   ├── config/              # Configuration loading and management
+│   ├── connectors/          # Metadata source connectors
+│   ├── ingestion/           # Ingestion orchestration and worker management
+│   ├── logger/              # Structured logging utilities
+│   ├── metrics/             # Prometheus metrics
+│   ├── models/              # Domain models
+│   ├── processor/           # Metadata processing pipeline
+│   ├── retry/               # Retry framework
+│   ├── server/              # HTTP server and API handlers
+│   ├── sink/                # Metadata sink implementations
+│   └── telemetry/           # OpenTelemetry integration
+└── README.md
+```
+
+The project follows the standard Go project layout:
+
+- **cmd/** contains the application entry point.
+- **internal/** contains packages that are private to the application and encapsulate the core business logic.
+- The ingestion pipeline is organized into connectors, processing, retry, telemetry, metrics, and sink components, keeping responsibilities well separated and making the system easy to extend.
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Go 1.26+
+- Docker (optional)
+
+### Clone the repository
+
+```bash
+git clone https://github.com/mohammedimrankasab/Metadata-Ingestion-Service.git
+
+cd Metadata-Ingestion-Service
+```
+
+### Run the application
+
+```bash
+go run ./cmd/app
+```
+
+### Verify the service
+
+```bash
+curl http://localhost:8080/health
+```
+
+Expected output:
+
+```json
+{
+  "status": "UP"
+}
 ```
 
 ---
@@ -280,7 +301,7 @@ Concurrent Workers
 Processor
    │
    ▼
-Sink (OpenSearch)
+Sink (Console, OpenSearch)
 ```
 
 ---
@@ -359,3 +380,7 @@ Building this project reinforced several key backend engineering principles:
 - Retry logic must be carefully designed to avoid overwhelming downstream services.
 - Observability should be built in from the beginning rather than added later.
 - Interfaces make connector implementations easier to extend and test.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
