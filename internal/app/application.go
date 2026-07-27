@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"time"
 
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/config"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/connectors"
@@ -13,57 +14,56 @@ import (
 )
 
 type Application struct {
-	Components       *Components
+	Logger           *zap.Logger
+	Server           *server.Server
 	IngestionService *ingestion.Service
-	Config           config.Config
+	Config           *config.Config
 }
 
 func NewApplication(
-	cfg config.Config,
+	cfg *config.Config,
 	logger *zap.Logger,
 ) (*Application, error) {
 
 	powerBI := connectors.NewPowerBIConnector(logger)
 	consoleSink := inSink.NewConsoleSink(logger)
 
-	processor := processor.NewProcessor(
+	metadataProcessor := processor.NewProcessor(
 		logger,
 		consoleSink,
 	)
 	service := ingestion.New(
 		logger,
 		cfg,
-		processor,
+		metadataProcessor,
 		powerBI,
 	)
-	metricsServer := server.New(logger, cfg, service)
-	components := &Components{
-		Logger: logger,
-		Server: metricsServer,
-	}
+	httpServer := server.New(logger, cfg, service)
+
 	return &Application{
-		Components:       components,
+		Logger:           logger,
+		Server:           httpServer,
 		IngestionService: service,
 		Config:           cfg,
 	}, nil
 }
 
-type Components struct {
-	Logger *zap.Logger
-	Server *server.Server
-}
-
 func (app *Application) Run(ctx context.Context) error {
-	app.Components.Logger.Info("Application starting")
-	app.Components.Server.Start()
+	app.Logger.Info("Application starting")
 	defer func() {
-		_ = app.Components.Logger.Sync()
+		_ = app.Logger.Sync()
 	}()
-	if err := app.IngestionService.Run(ctx); err != nil {
-		return err
-	}
+	app.Server.Start()
+	app.Logger.Info("application started")
+	<-ctx.Done()
 
-	app.Components.Logger.Info("Application stopped")
+	app.Logger.Info("shutting down")
 
-	return nil
+	shutdownCtx, cancel := context.WithTimeout(
+		context.Background(),
+		5*time.Second,
+	)
+	defer cancel()
+
+	return app.Server.Shutdown(shutdownCtx)
 }

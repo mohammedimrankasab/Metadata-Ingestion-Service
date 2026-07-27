@@ -1,3 +1,5 @@
+// Package ingestion orchestrates metadata collection and
+// concurrent processing using a configurable worker pool.
 package ingestion
 
 import (
@@ -9,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func StartWorker(
+func worker(
 	ctx context.Context,
 	id int,
 	logger *zap.Logger,
@@ -18,7 +20,13 @@ func StartWorker(
 	processor *processor.Processor,
 ) {
 
-	defer wg.Done()
+	defer func() {
+		logger.Info(
+			"worker exited",
+			zap.Int("worker", id),
+		)
+		wg.Done()
+	}()
 	logger.Info(
 		"Worker started",
 		zap.Int("worker", id),

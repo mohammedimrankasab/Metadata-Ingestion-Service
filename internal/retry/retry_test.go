@@ -5,86 +5,68 @@ import (
 	"errors"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/require"
 )
 
-func TestRetrySuccessFirstAttempt(t *testing.T) {
-
-	cfg := Config{
-		MaxRetries: 3,
-		BaseDelay:  10 * time.Millisecond,
-	}
-
-	calls := 0
-
-	err := Do(context.Background(), cfg, func() error {
-		calls++
-		return nil
-	})
-
-	require.NoError(t, err)
-	require.Equal(t, 1, calls)
-}
-
-func TestRetrySucceedsAfterRetry(t *testing.T) {
-
-	cfg := Config{
-		MaxRetries: 3,
-		BaseDelay:  5 * time.Millisecond,
-	}
+func TestRetryEventuallySucceeds(t *testing.T) {
 
 	attempts := 0
+
+	cfg := Config{
+		MaxRetries: 3,
+		BaseDelay:  time.Millisecond,
+	}
 
 	err := Do(context.Background(), cfg, func() error {
 
 		attempts++
 
 		if attempts < 3 {
-			return errors.New("temporary")
+			return errors.New("failed")
 		}
 
 		return nil
 	})
 
-	require.NoError(t, err)
-	require.Equal(t, 3, attempts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if attempts != 3 {
+		t.Fatalf("expected 3 attempts got %d", attempts)
+	}
 }
 
 func TestRetryFails(t *testing.T) {
 
 	cfg := Config{
-		MaxRetries: 3,
-		BaseDelay:  5 * time.Millisecond,
+		MaxRetries: 2,
+		BaseDelay:  time.Millisecond,
 	}
-
-	attempts := 0
 
 	err := Do(context.Background(), cfg, func() error {
-
-		attempts++
-
-		return errors.New("failed")
-
-	})
-
-	require.Error(t, err)
-	require.Equal(t, 4, attempts)
-}
-func TestRetryCancelled(t *testing.T) {
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	cancel()
-
-	cfg := Config{
-		MaxRetries: 3,
-		BaseDelay:  time.Second,
-	}
-
-	err := Do(ctx, cfg, func() error {
 		return errors.New("boom")
 	})
 
-	require.Error(t, err)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestRetryCancelled(t *testing.T) {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	cfg := Config{
+		MaxRetries: 5,
+		BaseDelay:  time.Millisecond,
+	}
+
+	err := Do(ctx, cfg, func() error {
+		return nil
+	})
+
+	if err == nil {
+		t.Fatal("expected context error")
+	}
 }

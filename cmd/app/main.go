@@ -31,33 +31,37 @@ func main() {
 		log.Fatal(err)
 	}
 
+	shutdownTracer, err := telemetry.InitTracer()
+	if err != nil {
+		logger.Fatal(
+			"failed to initialize telemetry",
+			zap.Error(err),
+		)
+	}
+
+	defer func() {
+		if err := shutdownTracer(context.Background()); err != nil {
+			logger.Error(
+				"failed to shutdown tracer",
+				zap.Error(err),
+			)
+		}
+	}()
+
 	metrics.Register()
 
-	application, err := app.NewApplication(*cfg, logger)
-
+	application, err := app.NewApplication(cfg, logger)
 	if err != nil {
 		logger.Fatal(
 			"unable to create application",
 			zap.Error(err),
 		)
 	}
-	if err := application.Run(ctx); err != nil {
 
-		application.Components.Logger.Fatal(
+	if err := application.Run(ctx); err != nil {
+		logger.Fatal(
 			"application failed",
 			zap.Error(err),
 		)
-
 	}
-	shutdownTracer, err := telemetry.Init()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer func() {
-		if err := shutdownTracer(context.Background()); err != nil {
-			log.Printf("error shutting down tracer: %v", err)
-		}
-	}()
-
 }

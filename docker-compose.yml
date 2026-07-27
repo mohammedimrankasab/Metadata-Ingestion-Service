@@ -1,0 +1,17 @@
+services:
+  metadata-ingestion-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: metadata-ingestion-service
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      HTTP_PORT: "8080"
+      WORKER_COUNT: "4"
+      JOB_QUEUE_SIZE: "100"
+
+    restart: unless-stopped

@@ -1,3 +1,5 @@
+// Package server provides the HTTP server,
+// middleware and REST API endpoints.
 package server
 
 import (
@@ -29,7 +31,7 @@ func (s *Server) Ready(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (s *Server) Ingest(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
 	go func() {
 		if err := s.ingestion.Run(r.Context()); err != nil {
 			s.logger.Error("ingestion failed", zap.Error(err))

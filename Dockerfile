@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1 - Build
 # -----------------------------------------------------------------------------
-FROM golang:1.26-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS builder
 
 # Install certificates and git (required for downloading some Go modules)
 RUN apk add --no-cache git ca-certificates
@@ -47,7 +47,12 @@ COPY --from=builder /src/metadata-ingestion-service .
 USER appuser
 
 # Expose application port
-EXPOSE 8080
+EXPOSE 8080 
+
+LABEL org.opencontainers.image.title="Metadata Ingestion Service"
+LABEL org.opencontainers.image.description="Production-style metadata ingestion service written in Go"
+LABEL org.opencontainers.image.source="https://github.com/mohammedimrankasab/Metadata-Ingestion-Service"
+LABEL org.opencontainers.image.licenses="MIT"
 
 # Run the application
 ENTRYPOINT ["./metadata-ingestion-service"]

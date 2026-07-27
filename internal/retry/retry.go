@@ -1,9 +1,12 @@
+// Package retry provides a reusable retry mechanism with
+// exponential backoff and context cancellation support.
 package retry
 
 import (
 	"context"
-	"errors"
 	"time"
+
+	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/metrics"
 )
 
 type Config struct {
@@ -37,6 +40,9 @@ func Do(
 			break
 		}
 
+		// Record that another retry will be attempted.
+		metrics.RetryCount.Inc()
+
 		timer := time.NewTimer(delay)
 
 		select {
@@ -52,5 +58,3 @@ func Do(
 
 	return err
 }
-
-var ErrPermanent = errors.New("permanent error")

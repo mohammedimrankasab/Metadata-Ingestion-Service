@@ -11,7 +11,6 @@ import (
 type Config struct {
 	WorkerCount  int
 	JobQueueSize int
-	MetricsPort  string
 	HTTPPort     string
 }
 
@@ -20,7 +19,6 @@ func Load() *Config {
 	return &Config{
 		WorkerCount:  getIntEnv("WORKER_COUNT", runtime.NumCPU()),
 		JobQueueSize: getIntEnv("JOB_QUEUE_SIZE", 100),
-		MetricsPort:  getStringEnv("METRICS_PORT", "2112"),
 		HTTPPort:     getStringEnv("HTTP_PORT", "8080"),
 	}
 }

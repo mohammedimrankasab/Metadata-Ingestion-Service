@@ -1,3 +1,5 @@
+// Package processor handles metadata processing,
+// retry logic and persistence to the configured sink.
 package processor
 
 import (
@@ -27,7 +29,20 @@ func NewProcessor(
 	}
 }
 
+var retryConfig = retry.Config{
+	MaxRetries: 3,
+	BaseDelay:  500 * time.Millisecond,
+}
+
 func (p *Processor) Process(ctx context.Context, job models.MetadataJob) error {
+	tracer := otel.Tracer("processor")
+
+	ctx, span := tracer.Start(
+		ctx,
+		"ProcessMetadata",
+	)
+
+	defer span.End()
 	start := time.Now()
 
 	defer func() {
@@ -40,27 +55,25 @@ func (p *Processor) Process(ctx context.Context, job models.MetadataJob) error {
 		zap.String("jobId", job.ID),
 		zap.String("connector", job.Connector),
 	)
-	cfg := retry.Config{
-		MaxRetries: 3,
-		BaseDelay:  500 * time.Millisecond,
-	}
-	err := retry.Do(ctx, cfg, func() error {
+
+	err := retry.Do(ctx, retryConfig, func() error {
 		return p.sink.Write(ctx, job.Metadata)
 	})
 
 	if err != nil {
+		p.logger.Error(
+			"processing failed",
+			zap.String("jobId", job.ID),
+			zap.Error(err),
+		)
 		metrics.JobsFailed.Inc()
 		return err
 	}
 
 	metrics.JobsProcessed.WithLabelValues(job.Connector).Inc()
-	tracer := otel.Tracer("processor")
-
-	ctx, span := tracer.Start(
-		ctx,
-		"ProcessMetadata",
+	p.logger.Debug(
+		"metadata processed",
+		zap.String("jobId", job.ID),
 	)
-
-	defer span.End()
 	return nil
 }

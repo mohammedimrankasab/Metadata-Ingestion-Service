@@ -1,6 +1,10 @@
 package metrics
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 var (
 	JobsProcessed = prometheus.NewCounterVec(
@@ -14,32 +18,34 @@ var (
 	JobsFailed = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "metadata_jobs_failed_total",
-			Help: "Total failed jobs",
+			Help: "Total number of failed metadata jobs.",
 		},
 	)
 
 	RetryCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "metadata_job_retries_total",
-			Help: "Retry count",
+			Help: "Total number of retry attempts.",
 		},
 	)
 
 	ProcessingDuration = prometheus.NewHistogram(
 		prometheus.HistogramOpts{
-			Name: "metadata_processing_duration_seconds",
-			Help: "Processing duration",
+			Name:    "metadata_processing_duration_seconds",
+			Help:    "Time taken to process a metadata job.",
+			Buckets: prometheus.DefBuckets,
 		},
 	)
 )
+var registerOnce sync.Once
 
 func Register() {
-
-	prometheus.MustRegister(
-		JobsProcessed,
-		JobsFailed,
-		RetryCount,
-		ProcessingDuration,
-	)
-
+	registerOnce.Do(func() {
+		prometheus.MustRegister(
+			JobsProcessed,
+			JobsFailed,
+			RetryCount,
+			ProcessingDuration,
+		)
+	})
 }

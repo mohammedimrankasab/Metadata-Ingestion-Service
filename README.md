@@ -113,11 +113,40 @@ git clone https://github.com/mohammedimrankasab/Metadata-Ingestion-Service.git
 cd Metadata-Ingestion-Service
 ```
 
-### Run the application
+### Configure environment variables (optional)
 
 ```bash
-go run ./cmd/app
+cp .env.example .env
 ```
+
+Adjust the values in `.env` as needed before starting the application.
+
+## Development
+
+Common development commands:
+
+```bash
+make run
+make test
+make cover
+make coverage
+make fmt
+make vet
+make build
+```
+
+## Running with Docker
+
+Build and start the service:
+
+```bash
+docker compose up --build
+```
+
+The service will be available at:
+
+- HTTP API: http://localhost:8080
+- Prometheus Metrics: http://localhost:8080/metrics
 
 ### Verify the service
 
@@ -301,7 +330,7 @@ Concurrent Workers
 Processor
    │
    ▼
-Sink (Console, OpenSearch)
+Sink (Console)
 ```
 
 ---

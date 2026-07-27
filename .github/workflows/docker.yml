@@ -4,16 +4,23 @@ on:
   push:
     branches:
       - main
+      - master
+
+  pull_request:
+    branches:
+      - main
+      - master
 
 jobs:
-
   docker:
-
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-      - uses: actions/checkout@v4
-
-      - name: Build Docker Image
-        run: docker build -t metadata-service .
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t metadata-ingestion-service:latest \
+            .

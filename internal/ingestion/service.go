@@ -1,7 +1,10 @@
+// Package ingestion orchestrates metadata collection and
+// concurrent processing using a configurable worker pool.
 package ingestion
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	inConfig "github.com/mohammedimrankasab/metadata-ingestion-service/internal/config"
@@ -15,10 +18,10 @@ type Service struct {
 	logger     *zap.Logger
 	processor  *processor.Processor
 	connectors []connectors.Connector
-	config     inConfig.Config
+	config     *inConfig.Config
 }
 
-func New(logger *zap.Logger, config inConfig.Config, processor *processor.Processor, connectors ...connectors.Connector) *Service {
+func New(logger *zap.Logger, config *inConfig.Config, processor *processor.Processor, connectors ...connectors.Connector) *Service {
 	return &Service{
 		logger:     logger,
 		config:     config,
@@ -28,6 +31,9 @@ func New(logger *zap.Logger, config inConfig.Config, processor *processor.Proces
 }
 
 func (s *Service) Run(ctx context.Context) error {
+	if len(s.connectors) == 0 {
+		return errors.New("no connectors configured")
+	}
 
 	jobs := make(chan models.MetadataJob, s.config.JobQueueSize)
 
@@ -36,7 +42,7 @@ func (s *Service) Run(ctx context.Context) error {
 	for i := 1; i <= s.config.WorkerCount; i++ {
 		wg.Add(1)
 
-		go StartWorker(
+		go worker(
 			ctx,
 			i,
 			s.logger,
@@ -47,15 +53,27 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 	defer func() {
 		close(jobs)
+
+		s.logger.Info("waiting for workers")
+
 		wg.Wait()
+
+		s.logger.Info("all workers completed")
 	}()
 	for _, connector := range s.connectors {
-
+		s.logger.Info(
+			"processing connector",
+			zap.String("connector", connector.Name()),
+		)
 		metadataList, err := connector.FetchMetadata(ctx, nil)
 		if err != nil {
 			return err
 		}
-
+		s.logger.Info(
+			"metadata fetched",
+			zap.String("connector", connector.Name()),
+			zap.Int("count", len(metadataList)),
+		)
 		for _, metadata := range metadataList {
 			job := models.NewJob(
 				connector.Name(),

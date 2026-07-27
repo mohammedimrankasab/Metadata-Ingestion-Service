@@ -1,3 +1,5 @@
+// Package server provides the HTTP server,
+// middleware and REST API endpoints.
 package server
 
 import (
@@ -26,7 +28,6 @@ func RequestID(next http.Handler) http.Handler {
 			RequestIDKey,
 			requestID,
 		)
-
 		next.ServeHTTP(
 			w,
 			r.WithContext(ctx),
@@ -38,14 +39,21 @@ func (s *Server) Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		start := time.Now()
+		rw := &statusRecorder{
+			ResponseWriter: w,
+			status:         http.StatusOK,
+		}
+		next.ServeHTTP(rw, r)
 
-		next.ServeHTTP(w, r)
+		requestID, _ := r.Context().Value(RequestIDKey).(string)
 
 		s.logger.Info(
-			"HTTP Request",
+			"http request",
 			zap.String("method", r.Method),
 			zap.String("path", r.URL.Path),
 			zap.Duration("duration", time.Since(start)),
+			zap.String("request_id", requestID),
+			zap.Int("status", rw.status),
 		)
 	})
 }
@@ -73,4 +81,14 @@ func (s *Server) Recovery(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *statusRecorder) WriteHeader(status int) {
+	r.status = status
+	r.ResponseWriter.WriteHeader(status)
 }

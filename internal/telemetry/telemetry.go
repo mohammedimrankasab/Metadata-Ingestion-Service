@@ -7,9 +7,12 @@ import (
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.41.0"
 )
 
-func Init() (func(context.Context) error, error) {
+const ServiceName = "metadata-ingestion-service"
+
+func InitTracer() (func(context.Context) error, error) {
 
 	exporter, err := stdouttrace.New(
 		stdouttrace.WithPrettyPrint(),
@@ -17,10 +20,19 @@ func Init() (func(context.Context) error, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	res, err := resource.Merge(
+		resource.Default(),
+		resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName(ServiceName),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
-		sdktrace.WithResource(resource.Default()),
+		sdktrace.WithResource(res),
 	)
 
 	otel.SetTracerProvider(tp)

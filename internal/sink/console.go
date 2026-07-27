@@ -24,21 +24,21 @@ func (c *ConsoleSink) Write(
 	ctx context.Context,
 	metadata models.Metadata,
 ) error {
+	tracer := otel.Tracer("sink")
 
+	ctx, span := tracer.Start(
+		ctx,
+		"ConsoleSink.Write",
+	)
+
+	defer span.End()
 	c.logger.Info(
-		"Metadata Written",
+		"metadata written",
 		zap.String("connector", metadata.Source),
 		zap.String("workspace", metadata.Workspace),
 		zap.String("name", metadata.Name),
 		zap.String("type", string(metadata.Type)),
 	)
-	tracer := otel.Tracer("sink")
 
-	_, span := tracer.Start(
-		ctx,
-		"WriteMetadata",
-	)
-
-	defer span.End()
 	return nil
 }

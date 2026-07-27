@@ -1,9 +1,12 @@
+// Package server provides the HTTP server,
+// middleware and REST API endpoints.
 package server
 
 import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/config"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/ingestion"
@@ -11,14 +14,18 @@ import (
 	"go.uber.org/zap"
 )
 
+type IngestionService interface {
+	Run(ctx context.Context) error
+}
+
 type Server struct {
 	logger    *zap.Logger
 	server    *http.Server
-	cfg       config.Config
-	ingestion *ingestion.Service
+	cfg       *config.Config
+	ingestion IngestionService
 }
 
-func New(logger *zap.Logger, cfg config.Config, ingestion *ingestion.Service) *Server {
+func New(logger *zap.Logger, cfg *config.Config, ingestion *ingestion.Service) *Server {
 
 	s := &Server{
 		logger:    logger,
@@ -28,29 +35,21 @@ func New(logger *zap.Logger, cfg config.Config, ingestion *ingestion.Service) *S
 
 	mux := http.NewServeMux()
 
+	mux.Handle("/health", s.withMiddleware(http.HandlerFunc(s.Health)))
+	mux.Handle("/ready", s.withMiddleware(http.HandlerFunc(s.Ready)))
+	mux.Handle("/ingest", s.withMiddleware(http.HandlerFunc(s.Ingest)))
 	mux.Handle("/metrics", promhttp.Handler())
 
-	handler := s.Recovery(
-		s.Logging(
-			RequestID(
-				http.HandlerFunc(s.Health),
-			),
-		),
-	)
-
-	mux.Handle("/health", handler)
-
-	mux.HandleFunc("/ready", s.Ready)
-	mux.HandleFunc("/ingest", s.Ingest)
-
-	return &Server{
-		logger: logger,
-		server: &http.Server{
-			Addr:    fmt.Sprintf(":%s", s.cfg.MetricsPort),
-			Handler: mux,
-		},
-		ingestion: ingestion,
+	s.server = &http.Server{
+		Addr:              fmt.Sprintf(":%s", cfg.HTTPPort),
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
+
+	return s
 }
 
 func (s *Server) Start() {
@@ -58,7 +57,7 @@ func (s *Server) Start() {
 	go func() {
 
 		s.logger.Info(
-			"Metrics server started",
+			"HTTP server started",
 			zap.String("addr", s.server.Addr),
 		)
 
@@ -66,7 +65,7 @@ func (s *Server) Start() {
 			err != http.ErrServerClosed {
 
 			s.logger.Error(
-				"Metrics server stopped",
+				"HTTP server stopped",
 				zap.Error(err),
 			)
 		}
@@ -75,7 +74,14 @@ func (s *Server) Start() {
 
 func (s *Server) Shutdown(ctx context.Context) error {
 
-	s.logger.Info("Shutting down metrics server")
+	s.logger.Info("Shutting down HTTP server")
 
 	return s.server.Shutdown(ctx)
+}
+func (s *Server) withMiddleware(h http.Handler) http.Handler {
+	return s.Recovery(
+		s.Logging(
+			RequestID(h),
+		),
+	)
 }
