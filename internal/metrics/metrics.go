@@ -36,6 +36,13 @@ var (
 			Buckets: prometheus.DefBuckets,
 		},
 	)
+
+	SinkProcessingDuration = prometheus.NewHistogram(
+		prometheus.HistogramOpts{
+			Name: "metadata_sink_processing_duration_seconds",
+			Help: "Time taken by sink write operation",
+		},
+	)
 )
 var registerOnce sync.Once
 

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/app"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/config"
@@ -31,7 +32,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	shutdownTracer, err := telemetry.InitTracer()
+	shutdownTracer, err := telemetry.InitTracer(cfg.EnableTracing)
 	if err != nil {
 		logger.Fatal(
 			"failed to initialize telemetry",
@@ -40,7 +41,12 @@ func main() {
 	}
 
 	defer func() {
-		if err := shutdownTracer(context.Background()); err != nil {
+		shutdownCtx, cancel := context.WithTimeout(
+			context.Background(),
+			5*time.Second,
+		)
+		defer cancel()
+		if err := shutdownTracer(shutdownCtx); err != nil {
 			logger.Error(
 				"failed to shutdown tracer",
 				zap.Error(err),
@@ -50,7 +56,7 @@ func main() {
 
 	metrics.Register()
 
-	application, err := app.NewApplication(cfg, logger)
+	application, err := app.NewApplication(ctx, cfg, logger)
 	if err != nil {
 		logger.Fatal(
 			"unable to create application",

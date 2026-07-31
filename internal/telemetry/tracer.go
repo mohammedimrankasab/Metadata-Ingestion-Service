@@ -12,14 +12,19 @@ import (
 
 const ServiceName = "metadata-ingestion-service"
 
-func InitTracer() (func(context.Context) error, error) {
-
+func InitTracer(enabled bool) (func(context.Context) error, error) {
+	if !enabled {
+		return func(context.Context) error {
+			return nil
+		}, nil
+	}
 	exporter, err := stdouttrace.New(
 		stdouttrace.WithPrettyPrint(),
 	)
 	if err != nil {
 		return nil, err
 	}
+
 	res, err := resource.Merge(
 		resource.Default(),
 		resource.NewWithAttributes(
@@ -27,9 +32,11 @@ func InitTracer() (func(context.Context) error, error) {
 			semconv.ServiceName(ServiceName),
 		),
 	)
+
 	if err != nil {
 		return nil, err
 	}
+
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
 		sdktrace.WithResource(res),

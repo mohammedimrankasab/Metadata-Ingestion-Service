@@ -11,6 +11,7 @@ type MetadataJob struct {
 	Metadata  Metadata
 	Connector string
 	CreatedAt time.Time
+	Done      chan struct{}
 }
 
 func NewJob(

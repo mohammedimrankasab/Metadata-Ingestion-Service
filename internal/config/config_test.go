@@ -9,7 +9,6 @@ import (
 func TestLoadDefaults(t *testing.T) {
 	t.Setenv("WORKER_COUNT", "")
 	t.Setenv("JOB_QUEUE_SIZE", "")
-	t.Setenv("METRICS_PORT", "")
 	t.Setenv("HTTP_PORT", "")
 
 	cfg := Load()
@@ -31,7 +30,6 @@ func TestLoadEnvironment(t *testing.T) {
 	t.Setenv("WORKER_COUNT", "5")
 	t.Setenv("JOB_QUEUE_SIZE", "50")
 	t.Setenv("HTTP_PORT", "9000")
-	t.Setenv("METRICS_PORT", "9999")
 
 	cfg := Load()
 

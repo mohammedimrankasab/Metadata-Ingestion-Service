@@ -8,6 +8,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.uber.org/zap"
 )
 
@@ -91,4 +94,61 @@ type statusRecorder struct {
 func (r *statusRecorder) WriteHeader(status int) {
 	r.status = status
 	r.ResponseWriter.WriteHeader(status)
+}
+func (s *Server) Tracing(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(
+		func(
+			w http.ResponseWriter,
+			r *http.Request,
+		) {
+
+			ctx, span := otel.Tracer(
+				"metadata-ingestion-service/http",
+			).Start(
+				r.Context(),
+				"HTTP "+r.Method+" "+r.URL.Path,
+			)
+
+			defer span.End()
+
+			span.SetAttributes(
+				attribute.String(
+					"http.method",
+					r.Method,
+				),
+				attribute.String(
+					"http.route",
+					r.URL.Path,
+				),
+			)
+
+			r = r.WithContext(ctx)
+
+			rw := &statusRecorder{
+				ResponseWriter: w,
+				status:         http.StatusOK,
+			}
+
+			next.ServeHTTP(
+				rw,
+				r,
+			)
+
+			span.SetAttributes(
+				attribute.Int(
+					"http.status_code",
+					rw.status,
+				),
+			)
+
+			if rw.status >= 500 {
+
+				span.SetStatus(
+					codes.Error,
+					"HTTP request failed",
+				)
+			}
+		},
+	)
 }

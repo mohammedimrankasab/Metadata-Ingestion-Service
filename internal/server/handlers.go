@@ -30,19 +30,71 @@ func (s *Server) Ready(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
-func (s *Server) Ingest(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+
+func (s *Server) Ingest(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+
+	w.Header().Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	s.ingestMu.Lock()
+
+	if s.running {
+
+		s.ingestMu.Unlock()
+
+		w.WriteHeader(
+			http.StatusConflict,
+		)
+
+		json.NewEncoder(w).Encode(
+			map[string]string{
+				"message": "Ingestion already running",
+			},
+		)
+
+		return
+	}
+
+	s.running = true
+
+	s.ingestMu.Unlock()
+
 	go func() {
-		if err := s.ingestion.Run(r.Context()); err != nil {
-			s.logger.Error("ingestion failed", zap.Error(err))
+
+		defer func() {
+
+			s.ingestMu.Lock()
+
+			s.running = false
+
+			s.ingestMu.Unlock()
+
+		}()
+
+		if err := s.ingestion.Run(
+			s.appCtx,
+		); err != nil {
+
+			s.logger.Error(
+				"ingestion failed",
+				zap.Error(err),
+			)
 		}
+
 	}()
 
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(
+		http.StatusAccepted,
+	)
 
-	if err := json.NewEncoder(w).Encode(map[string]string{
-		"message": "Ingestion started",
-	}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	json.NewEncoder(w).Encode(
+		map[string]string{
+			"message": "Ingestion started",
+		},
+	)
 }

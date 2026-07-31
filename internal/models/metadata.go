@@ -8,6 +8,9 @@ const (
 	ReportType    MetadataType = "REPORT"
 	DashboardType MetadataType = "DASHBOARD"
 	DatasetType   MetadataType = "DATASET"
+
+	TableType  MetadataType = "TABLE"
+	ColumnType MetadataType = "COLUMN"
 )
 
 type Metadata struct {

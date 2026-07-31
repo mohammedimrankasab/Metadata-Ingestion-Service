@@ -7,19 +7,21 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/models"
-	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
 
 const sampleMetadataCount = 200
 
 type PowerBIConnector struct {
-	logger *zap.Logger
+	BaseConnector
 }
 
-func NewPowerBIConnector(logger *zap.Logger) *PowerBIConnector {
+func NewPowerBIConnector(
+	logger *zap.Logger,
+) *PowerBIConnector {
+
 	return &PowerBIConnector{
-		logger: logger,
+		BaseConnector: NewBaseConnector(logger),
 	}
 }
 
@@ -27,68 +29,86 @@ func (p *PowerBIConnector) Name() string {
 	return "PowerBI"
 }
 
-func (p *PowerBIConnector) FetchMetadata(ctx context.Context, lastSyncTime *time.Time) ([]models.Metadata, error) {
-	tracer := otel.Tracer("connectors")
+func (p *PowerBIConnector) FetchMetadata(
+	ctx context.Context,
+	lastSyncTime *time.Time,
+) ([]models.Metadata, error) {
 
-	ctx, span := tracer.Start(
+	ctx, endTrace := p.StartTrace(
 		ctx,
 		"PowerBI.FetchMetadata",
 	)
 
-	defer span.End()
-	p.logger.Info("Fetching metadata from PowerBI connector...")
+	defer endTrace()
+
+	p.logger.Info(
+		"fetching metadata from PowerBI",
+	)
+
 	select {
 
 	case <-ctx.Done():
 		return nil, ctx.Err()
 
-	case <-time.After(500 * time.Millisecond):
+	case <-time.After(
+		500 * time.Millisecond,
+	):
 
 	}
-	metadataList := make(
+
+	now := time.Now()
+
+	metadata := make(
 		[]models.Metadata,
 		0,
 		sampleMetadataCount,
 	)
-	now := time.Now()
+
 	for i := 1; i <= sampleMetadataCount; i++ {
 
-		metadataList = append(metadataList,
+		metadata = append(
+			metadata,
 			models.NewMetadata(
 				uuid.NewString(),
-				fmt.Sprintf("Dashboard-%d", i),
+				fmt.Sprintf(
+					"Dashboard-%d",
+					i,
+				),
 				models.DashboardType,
 				"Finance",
 				p.Name(),
 				now,
 			),
 		)
-
 	}
 
-	if lastSyncTime == nil {
-		p.logger.Info(
-			"metadata fetched",
-			zap.Int("count", len(metadataList)),
-		)
-		return metadataList, nil
-	}
-
-	filtered := make([]models.Metadata, 0, len(metadataList))
-
-	for _, m := range metadataList {
-		if m.LastModified.After(*lastSyncTime) {
-			filtered = append(filtered, m)
-		}
-	}
+	metadata = p.FilterByLastSync(
+		metadata,
+		lastSyncTime,
+	)
 
 	p.logger.Info(
 		"metadata fetched",
-		zap.Int("count", len(filtered)),
+		zap.String(
+			"connector",
+			p.Name(),
+		),
+		zap.Int(
+			"count",
+			len(metadata),
+		),
 	)
-	return filtered, nil
+
+	return metadata, nil
 }
-func (p *PowerBIConnector) Health(ctx context.Context) error {
-	p.logger.Debug("checking connector health")
+
+func (p *PowerBIConnector) Health(
+	ctx context.Context,
+) error {
+
+	p.logger.Debug(
+		"checking connector health",
+	)
+
 	return nil
 }

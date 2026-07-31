@@ -1,0 +1,11 @@
+id,name,type,workspace,last_modified
+1,Executive Dashboard,DASHBOARD,Finance,2026-01-10T10:00:00Z
+2,Sales Dashboard,DASHBOARD,Sales,2026-01-11T09:00:00Z
+3,Customer Dataset,DATASET,Sales,2026-01-12T12:30:00Z
+4,Revenue Report,REPORT,Finance,2026-01-13T14:15:00Z
+5,Inventory Dashboard,DASHBOARD,Operations,2026-01-14T08:45:00Z
+6,Marketing Dataset,DATASET,Marketing,2026-01-15T16:20:00Z
+7,Customer Report,REPORT,Support,2026-01-16T10:10:00Z
+8,Executive Dataset,DATASET,Finance,2026-01-17T13:50:00Z
+9,Operations Dashboard,DASHBOARD,Operations,2026-01-18T15:40:00Z
+10,Sales Report,REPORT,Sales,2026-01-19T11:25:00Z

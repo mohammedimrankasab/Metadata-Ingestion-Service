@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/mohammedimrankasab/metadata-ingestion-service/internal/config"
@@ -19,18 +20,24 @@ type IngestionService interface {
 }
 
 type Server struct {
-	logger    *zap.Logger
-	server    *http.Server
-	cfg       *config.Config
-	ingestion IngestionService
+	appCtx        context.Context
+	logger        *zap.Logger
+	server        *http.Server
+	cfg           *config.Config
+	ingestion     IngestionService
+	enableTracing bool
+	ingestMu      sync.Mutex
+	running       bool
 }
 
-func New(logger *zap.Logger, cfg *config.Config, ingestion *ingestion.Service) *Server {
+func New(ctx context.Context, logger *zap.Logger, cfg *config.Config, ingestion *ingestion.Service) *Server {
 
 	s := &Server{
-		logger:    logger,
-		ingestion: ingestion,
-		cfg:       cfg,
+		appCtx:        ctx,
+		logger:        logger,
+		ingestion:     ingestion,
+		cfg:           cfg,
+		enableTracing: cfg.EnableTracing,
 	}
 
 	mux := http.NewServeMux()
@@ -78,10 +85,16 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	return s.server.Shutdown(ctx)
 }
+
 func (s *Server) withMiddleware(h http.Handler) http.Handler {
+
+	handler := RequestID(h)
+
+	if s.enableTracing {
+		handler = s.Tracing(handler)
+	}
+
 	return s.Recovery(
-		s.Logging(
-			RequestID(h),
-		),
+		s.Logging(handler),
 	)
 }

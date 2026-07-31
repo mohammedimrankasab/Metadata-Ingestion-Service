@@ -1,63 +1,52 @@
 # Metadata Ingestion Service
 
+> **Demonstrates:** Go • Worker Pools • Concurrent Processing • Clean Architecture • OpenTelemetry • Prometheus • Docker • Dependency Injection • Strategy Pattern • Retry Pattern • Backend System Design
 
-![Go](https://img.shields.io/badge/Go-1.26-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Docker](https://img.shields.io/badge/docker-ready-blue) ![Prometheus](https://img.shields.io/badge/prometheus-enabled-orange)
+![Go](https://img.shields.io/badge/Go-1.26-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
+![Prometheus](https://img.shields.io/badge/prometheus-enabled-orange)
+![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-enabled-blueviolet)
 
-**Metadata Ingestion Service** is a production-style backend application written in Go that demonstrates scalable metadata ingestion, concurrent processing, observability, and fault-tolerant system design.
+A production-style metadata ingestion service written in Go that demonstrates scalable backend architecture, concurrent processing, observability, and extensible connector/sink design.
 
-Inspired by enterprise metadata platforms, the project showcases how to build maintainable, fault-tolerant backend services using modern Go design principles.
-
-## Why this project?
-
-Enterprise metadata platforms ingest millions of metadata entities from external systems such as Power BI, Tableau, MLflow, databases, and cloud services.
-
-This project demonstrates how such ingestion pipelines can be designed using scalable Go concurrency patterns while maintaining reliability, observability, and clean architecture.
-
-Although simplified for demonstration purposes, the architecture closely follows patterns used in production systems.
-
-The goal of this project is to demonstrate production-ready backend engineering concepts including:
-
-- Concurrent metadata ingestion
-- Connector framework
-- Worker pools
-- Context propagation
-- Graceful shutdown
-- Retry mechanisms
-- Rate limiting
-- Observability
-- Profiling
+Inspired by enterprise metadata platforms, the service ingests metadata from multiple sources, processes it concurrently using a configurable worker pool, and publishes it to pluggable sinks while exposing metrics and distributed traces.
 
 ---
 
-## Architecture
+# Highlights
 
-The following diagram illustrates the high-level architecture of the Metadata Ingestion Service and the flow of metadata through the ingestion pipeline.
+- Concurrent metadata ingestion using worker pools
+- Pluggable connector architecture
+- Pluggable sink architecture
+- Retry with exponential backoff
+- Context propagation and graceful shutdown
+- Prometheus metrics
+- OpenTelemetry tracing
+- Docker support
+- GitHub Actions CI
+- Clean Architecture with dependency injection
+
+---
+
+# Architecture
 
 <p align="center">
-  <img src="docs/architecture.png" alt="Metadata Ingestion Service Architecture" width="900"/>
+  <img src="docs/architecture.png" width="900">
 </p>
 
 ---
 
-## Tech Stack
+# Technology Stack
 
-### Language
-
-- Go 1.26
-
-### Libraries
-
-- Zap
-- Prometheus Client
-- OpenTelemetry
-
-### Infrastructure
-
-- Docker
-
-### CI/CD
-
-- GitHub Actions
+| Category | Technology |
+|-----------|------------|
+| Language | Go 1.26 |
+| Logging | Zap |
+| Metrics | Prometheus |
+| Tracing | OpenTelemetry |
+| Containerization | Docker |
+| CI | GitHub Actions |
 
 ### Design Patterns
 
@@ -68,44 +57,83 @@ The following diagram illustrates the high-level architecture of the Metadata In
 
 ---
 
-## Project Structure
+# Project Structure
 
 ```text
 .
 ├── cmd/
-│   └── app/                 # Application entry point
+│   └── app/
 ├── internal/
-│   ├── app/                 # Application bootstrap and initialization
-│   ├── config/              # Configuration loading and management
-│   ├── connectors/          # Metadata source connectors
-│   ├── ingestion/           # Ingestion orchestration and worker management
-│   ├── logger/              # Structured logging utilities
-│   ├── metrics/             # Prometheus metrics
-│   ├── models/              # Domain models
-│   ├── processor/           # Metadata processing pipeline
-│   ├── retry/               # Retry framework
-│   ├── server/              # HTTP server and API handlers
-│   ├── sink/                # Metadata sink implementations
-│   └── telemetry/           # OpenTelemetry integration
+│   ├── app/
+│   ├── config/
+│   ├── connectors/
+│   ├── ingestion/
+│   ├── logger/
+│   ├── metrics/
+│   ├── models/
+│   ├── processor/
+│   ├── retry/
+│   ├── server/
+│   ├── sink/
+│   └── telemetry/
 └── README.md
 ```
 
-The project follows the standard Go project layout:
+---
 
-- **cmd/** contains the application entry point.
-- **internal/** contains packages that are private to the application and encapsulate the core business logic.
-- The ingestion pipeline is organized into connectors, processing, retry, telemetry, metrics, and sink components, keeping responsibilities well separated and making the system easy to extend.
+# Features
+
+## Connectors
+
+| Connector | Status |
+|------------|--------|
+| Power BI | ✅ |
+| CSV | ✅ |
+
+Additional connectors can be added by implementing the `Connector` interface.
 
 ---
 
-## Quick Start
+## Sinks
 
-### Prerequisites
+| Sink | Status |
+|-------|--------|
+| Console | ✅ |
+| OpenSearch | ✅ |
+
+The active sink is selected using configuration.
+
+---
+
+# Configuration
+
+The service is configured using environment variables.
+
+| Variable | Default | Description |
+|----------|----------|-------------|
+| HTTP_PORT | 8080 | HTTP server port |
+| WORKER_COUNT | Number of CPU cores | Concurrent workers |
+| JOB_QUEUE_SIZE | 100 | Buffered job queue size |
+| SINK_TYPE | console | console / opensearch |
+| OPENSEARCH_URL | http://localhost:9200 | OpenSearch endpoint |
+| OPENSEARCH_INDEX | metadata | OpenSearch index |
+
+Example:
+
+```bash
+cp .env.sample .env
+```
+
+---
+
+# Running Locally
+
+## Prerequisites
 
 - Go 1.26+
 - Docker (optional)
 
-### Clone the repository
+Clone the repository.
 
 ```bash
 git clone https://github.com/mohammedimrankasab/Metadata-Ingestion-Service.git
@@ -113,303 +141,141 @@ git clone https://github.com/mohammedimrankasab/Metadata-Ingestion-Service.git
 cd Metadata-Ingestion-Service
 ```
 
-### Configure environment variables (optional)
-
-```bash
-cp .env.example .env
-```
-
-Adjust the values in `.env` as needed before starting the application.
-
-## Development
-
-Common development commands:
+Run the service.
 
 ```bash
 make run
-make test
-make cover
-make coverage
-make fmt
-make vet
-make build
 ```
 
-## Running with Docker
-
-Build and start the service:
+Or start using Docker.
 
 ```bash
 docker compose up --build
 ```
 
-The service will be available at:
+The application will be available at:
 
-- HTTP API: http://localhost:8080
-- Prometheus Metrics: http://localhost:8080/metrics
-
-### Verify the service
-
-```bash
-curl http://localhost:8080/health
 ```
-
-Expected output:
-
-```json
-{
-  "status": "UP"
-}
-```
-
----
-
-## API Documentation
-
-The Metadata Ingestion Service exposes a minimal REST API for monitoring and triggering metadata ingestion workflows.
-
-**Base URL**
-
-```text
 http://localhost:8080
 ```
 
+Metrics:
+
+```
+http://localhost:8080/metrics
+```
+
 ---
 
-## Endpoints
+# Development
+
+```bash
+make run
+make build
+make test
+make cover
+make coverage
+make fmt
+make vet
+```
+
+---
+
+# REST API
 
 | Method | Endpoint | Description |
 |---------|----------|-------------|
-| GET | `/health` | Returns the liveness status of the service |
-| GET | `/ready` | Returns the readiness status of the service |
-| POST | `/ingest` | Starts an asynchronous metadata ingestion job |
+| GET | `/health` | Health check |
+| GET | `/ready` | Readiness check |
+| POST | `/ingest` | Starts metadata ingestion |
 
----
+Example:
 
-## GET /health
-
-Returns the current health status of the application.
-
-### Request
-
-```http
-GET /health HTTP/1.1
-Host: localhost:8080
+```bash
+curl -X POST http://localhost:8080/ingest
 ```
 
-### Response
-
-**Status:** `200 OK`
+Response
 
 ```json
 {
-  "status": "UP"
+  "message": "Ingestion started"
 }
 ```
 
-### Description
-
-This endpoint is intended for:
-
-- Kubernetes Liveness Probe
-- Docker health checks
-- Load balancer monitoring
-- Service availability verification
-
 ---
 
-## GET /ready
-
-Returns whether the service is ready to accept ingestion requests.
-
-### Request
-
-```http
-GET /ready HTTP/1.1
-Host: localhost:8080
-```
-
-### Response
-
-**Status:** `200 OK`
-
-```json
-{
-    "status": "READY"
-}
-```
-
-### Description
-
-This endpoint is intended for:
-
-- Kubernetes Readiness Probe
-- Deployment rollouts
-- Traffic routing
-- Startup verification
-
----
-
-## POST /ingest
-
-Starts a metadata ingestion workflow.
-
-The ingestion process executes asynchronously. The API immediately returns an acknowledgment while the ingestion pipeline continues processing in the background.
-
-### Request
-
-```http
-POST /ingest HTTP/1.1
-Host: localhost:8080
-Content-Type: application/json
-```
-
-No request body is required.
-
-### Response
-
-**Status:** `202 Accepted`
-
-```json
-{
-    "message": "Ingestion started"
-}
-```
-
-### Processing Workflow
-
-Once an ingestion request is received, the service performs the following steps:
-
-1. Starts the ingestion service in a background goroutine.
-2. Creates a buffered job queue.
-3. Initializes a configurable worker pool.
-4. Retrieves metadata from all configured connectors.
-5. Converts metadata into ingestion jobs.
-6. Places jobs into the queue.
-7. Workers process jobs concurrently.
-8. Processed metadata is written to the configured sink.
-9. Prometheus metrics and application logs are generated throughout the execution.
-10. The service waits for all workers to complete before terminating the ingestion run.
-
----
-
-## Request Lifecycle
+# Processing Flow
 
 ```text
-Client
-   │
-   ▼
-POST /ingest
-   │
-   ▼
-HTTP Handler
-   │
-   ▼
-Start Background Goroutine
-   │
-   ▼
-Create Job Queue
-   │
-   ▼
-Start Worker Pool
-   │
-   ▼
-Fetch Metadata
-(Power BI, Tableau, MLflow)
-   │
-   ▼
-Create Metadata Jobs
-   │
-   ▼
-Buffered Channel
-   │
-   ▼
-Concurrent Workers
-   │
-   ▼
-Processor
-   │
-   ▼
-Sink (Console)
+HTTP Request
+      │
+      ▼
+ Connector(s)
+(Power BI / CSV)
+      │
+      ▼
+ Metadata Jobs
+      │
+      ▼
+ Buffered Queue
+      │
+      ▼
+ Worker Pool
+      │
+      ▼
+ Processor
+      │
+      ▼
+ Configured Sink
+(Console / OpenSearch)
 ```
 
 ---
 
-## Concurrency Model
+# Concurrency Model
 
-The ingestion service uses a worker pool pattern for efficient concurrent processing.
+The ingestion pipeline is built around a configurable worker pool.
 
-- Configurable worker count
 - Buffered job queue
-- Goroutines for parallel execution
-- Channels for job distribution
-- WaitGroup for synchronization
-- Context propagation for graceful shutdown
-- Automatic cleanup after processing completes
-
----
-
-## HTTP Status Codes
-
-| Status Code | Description |
-|-------------|-------------|
-| `200 OK` | Health or readiness check completed successfully |
-| `202 Accepted` | Metadata ingestion has been started successfully |
-| `500 Internal Server Error` | Unexpected server error while processing the request |
-
----
-
-## Notes
-
-- Metadata ingestion is asynchronous and non-blocking.
-- Worker count and job queue size are configurable through the application configuration.
-- All configured connectors are processed during an ingestion run.
-- Context propagation enables graceful shutdown and cancellation of in-flight operations.
-- The service follows a connector-based architecture, making it easy to add support for additional metadata sources.
-- Prometheus metrics and structured logging provide operational observability.
-
----
-
-## Features
-
-- Connector abstraction
-- Concurrent metadata ingestion
-- Worker Pool implementation
-- Context propagation
+- Configurable worker count
+- Goroutines
+- Channels
+- WaitGroup synchronization
+- Context cancellation
 - Graceful shutdown
-- Retry with exponential backoff
-- Dependency Injection
-- Prometheus metrics
-- HTTP health endpoints
-- Docker support
-- GitHub Actions CI
 
-## Concepts Demonstrated
+---
 
+# Concepts Demonstrated
+
+- Clean Architecture
 - Interfaces
 - Dependency Injection
 - Goroutines
 - Channels
-- WaitGroups
-- Context
 - Worker Pools
-- Middleware
 - Retry Pattern
+- Strategy Pattern
+- Context Propagation
 - Prometheus Metrics
-- HTTP Servers
+- OpenTelemetry
+- REST APIs
 - Docker
 - CI/CD
 
-## Lessons Learned
+---
 
-Building this project reinforced several key backend engineering principles:
+# Future Improvements
 
-- Concurrency should improve throughput without sacrificing maintainability.
-- Context propagation is essential for graceful cancellation.
-- Retry logic must be carefully designed to avoid overwhelming downstream services.
-- Observability should be built in from the beginning rather than added later.
-- Interfaces make connector implementations easier to extend and test.
+- Incremental synchronization
+- Additional connectors (Tableau, MLflow)
+- Kubernetes deployment manifests
+- Persistent job queue
+- OpenAPI documentation
 
-## License
+---
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+# License
+
+Licensed under the MIT License.
